@@ -1,7 +1,7 @@
 {
-  "name": "grupyrn-meetup",
+  "name": "jararaquinha",
   "version": "1.0.0",
-  "description": "GruPy-RN Event Check-in System",
+  "description": "GruPy-RN Event Check-in Client",
   "main": "webpack.config.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -10,14 +10,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/GruPy-RN/checkin_api.git"
+    "url": "git+https://github.com/GruPy-RN/jararaquinha.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/GruPy-RN/checkin_api/issues"
+    "url": "https://github.com/GruPy-RN/jararaquinha/issues"
   },
-  "homepage": "https://github.com/GruPy-RN/checkin_api#readme",
+  "homepage": "https://github.com/GruPy-RN/jararaquinha#readme",
   "devDependencies": {
     "@babel/core": "^7.3.4",
     "@babel/node": "^7.2.2",
