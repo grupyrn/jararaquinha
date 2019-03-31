@@ -2,8 +2,7 @@ import React, {Component} from "react";
 import {setResponse} from "../reducers";
 import {connect} from "react-redux";
 import config from "../config"
-import {CSSTransitionGroup} from 'react-transition-group'
-import Alert from "./Intro";
+import Alert from "./utils/Alert";
 import Animation from "./utils/Animation"; // ES6
 
 class Message extends Component {
