@@ -1,10 +1,11 @@
 import React, {Component} from "react";
 import QrReader from 'react-qr-reader'
-import {checkin_event} from "../api/API.js"
-import {setResponse} from "../reducers";
+import {checkin_event, checkin_subevent, } from "../api/API.js"
+import {setResponse, setSubEvent} from "../reducers";
 import {connect} from "react-redux";
 import config from "../config"
 import Animation from "./utils/Animation";
+import {checkout_allsubevents} from "../api/API";
 
 
 class Camera extends Component {
@@ -20,11 +21,17 @@ class Camera extends Component {
     };
 
     handleScan = data => {
+        const {subevent, event} = this.props;
+
         if (data) {
             this.setState({
                 result: data
             });
-            this.processRequest(this.props.event.id, {hash: data});
+            if (subevent==null) {
+                this.processRequest(event.id, {hash: data});
+            } else {
+                this.processSubEventRequest(subevent.id, {hash: data});
+            }
 
         }
     };
@@ -42,17 +49,24 @@ class Camera extends Component {
         console.log('Desmontando a câmera')
     }
 
+    goBack() {
+        const {navigation, setSubEvent} = this.props
+        setSubEvent(null);
+        navigation.navigate('Intro');
+    }
+
 
     render() {
         const {navigation} = this.props;
         const {result} = this.state;
+        console.log('propsss', this.props);
 
         return (
             <div>
                 <Animation>
                     <p>
                         <button className={'btn btn-outline-info'}
-                                onClick={() => this.props.navigation.navigate('Intro')}>Voltar
+                                onClick={() => this.goBack.bind(this)()}>Voltar
                         </button>
                     </p>
                     <p>
@@ -87,6 +101,8 @@ class Camera extends Component {
         const param = this.props.navigation.state.params.check;
         const check = (param === 'in') ? true : (param === 'out' ? false : null);
 
+
+
         if (!this.state.busy) {
             this.setState({busy: true});
             checkin_event(event_id, data, check).then(response => {
@@ -118,16 +134,95 @@ class Camera extends Component {
             });
         }
     }
+
+
+    processSubEventRequest(subevent_id, data) {
+        const param = this.props.navigation.state.params.check;
+        const check = (param === 'in') ? true : (param === 'out' ? false : null);
+
+
+
+        if (!this.state.busy) {
+            this.setState({busy: true});
+
+            if (!check) {
+                const payload = {hash: data.hash};
+
+                console.log("payload", payload);
+
+                checkout_allsubevents(payload).then(response => {
+                    this.setState({cpf: ''});
+                    this.props.setResponse({check: check, ...response.data});
+                    this.props.navigation.navigate('Message');
+                }).catch(error => {
+                    if (error.response) {
+                        data = error.response.data;
+                        if (data.attendee) {
+                            data.message = "QR-Code inválido";
+                            data.typeStatus = "danger";
+                        }
+
+                        this.props.setResponse({check: check, ...data});
+                        this.props.navigation.navigate('Message');
+                    } else if (error.request) {
+                        // The request was made but no response was received
+                        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+                        // http.ClientRequest in node.js
+                        console.log(error.request);
+                    } else {
+                        // Something happened in setting up the request that triggered an Error
+                        console.log('Error', error.message);
+                    }
+                    console.log(error.config);
+                }).finally(() => {
+                    this.setState({busy: false});
+                });
+            } else {
+                const payload = {hash: data.hash};
+
+                console.log("payload", payload);
+
+                checkin_subevent(subevent_id, payload, true).then(response => {
+                    this.setState({cpf: ''});
+                    this.props.setResponse({check: check, ...response.data});
+                    this.props.navigation.navigate('Message');
+                }).catch(error => {
+                    if (error.response) {
+                        data = error.response.data;
+                        if (data.attendee) {
+                            data.message = "QR-Code inválido";
+                            data.typeStatus = "danger";
+                        }
+
+                        this.props.setResponse({check: check, ...data});
+                        this.props.navigation.navigate('Message');
+                    } else if (error.request) {
+                        // The request was made but no response was received
+                        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+                        // http.ClientRequest in node.js
+                        console.log(error.request);
+                    } else {
+                        // Something happened in setting up the request that triggered an Error
+                        console.log('Error', error.message);
+                    }
+                    console.log(error.config);
+                }).finally(() => {
+                    this.setState({busy: false});
+                });
+            }
+        }
+    }
 }
 
 
 const mapStateToProps = state => {
-    return {event: state.event};
+    return {event: state.event, subevent: state.subevent};
 };
 
 function mapDispatchToProps(dispatch) {
     return {
-        setResponse: event_id => dispatch(setResponse(event_id))
+        setResponse: event_id => dispatch(setResponse(event_id)),
+        setSubEvent: event_id => dispatch(setSubEvent(event_id))
     };
 }
 

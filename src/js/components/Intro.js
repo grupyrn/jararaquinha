@@ -1,7 +1,7 @@
 import React, {Component} from "react";
 import {current_events} from "../api/API";
 import {connect} from "react-redux";
-import {setEvent} from "../reducers";
+import {setEvent, setSubEvent} from "../reducers";
 import config from "../config"
 import '../index.css';
 import Alert from "./utils/Alert";
@@ -60,6 +60,13 @@ class Intro extends Component {
         setEvent(event);
     }
 
+    selectSubEvent(subevent, check) {
+        const {setSubEvent, navigation} = this.props;
+        setSubEvent(subevent);
+
+        navigation.navigate('Camera', {check: check})
+    }
+
     renderEvents() {
         const lista = [];
         this.state.data.forEach((event, i) => {
@@ -85,6 +92,26 @@ class Intro extends Component {
         return <Animation><Alert type="info"><h5>Não há nenhum evento ativo no momento.</h5></Alert></Animation>;
     }
 
+    renderSingleEvent() {
+
+        return <div>
+            <h4 key={"title"} className={"title"}>Bem vindo(a) ao {this.props.event.name} </h4>
+            <p>
+                <button className={'btn btn-outline-success btn-lg'} key={"checkin"}
+                        onClick={() => this.props.navigation.navigate('Camera', {check: 'in'})}>Realizar
+                    Check-in
+                </button>
+            </p>
+            <p>
+                <button className={'btn btn-outline-danger btn-lg'} key={"checkout"}
+                        onClick={() => this.props.navigation.navigate('Camera', {check: 'out'})}>Realizar
+                    Check-out
+                </button>
+            </p>
+            {this.renderSubEvents()}
+        </div>
+    }
+
     render() {
         return (
             <div>
@@ -101,34 +128,57 @@ class Intro extends Component {
                                 </Animation>
                                 :
                                 <Animation>
-                                    <h4 key={"title"} className={"title"}>Bem vindo(a) ao {this.props.event.name} </h4>
-                                    <p>
-                                        <button className={'btn btn-outline-success btn-lg'} key={"checkin"}
-                                                onClick={() => this.props.navigation.navigate('Camera', {check: 'in'})}>Realizar
-                                            Check-in
-                                        </button>
-                                    </p>
-                                    <p>
-                                        <button className={'btn btn-outline-danger btn-lg'} key={"checkout"}
-                                                onClick={() => this.props.navigation.navigate('Camera', {check: 'out'})}>Realizar
-                                            Check-out
-                                        </button>
-                                    </p>
+                                    {this.renderSingleEvent()}
                                 </Animation>
                 }
             </div>
 
         );
     }
+
+    renderSubEvents() {
+
+        let subevents = [];
+        for (let day of this.props.event.days){
+            subevents.push(day.subevents);
+        }
+
+        subevents = subevents.flat();
+
+        if (subevents.length===0)
+            return <div />;
+
+        const components = [];
+        subevents.forEach((subevent, i) => {
+            components.push(<div>
+                <button className={'btn btn-outline-success btn-sm'}
+                        onClick={() => this.selectSubEvent.bind(this)(subevent, 'in')}>Realizar
+                    Check-in ({subevent.title})
+                </button>
+            </div>)
+        });
+            components.push(<div>
+                <button className={'btn btn-outline-danger btn-sm'}
+                        onClick={() => this.selectSubEvent.bind(this)(subevents[0], 'out')}>Realizar
+                    Check-out de todos os sub-eventos
+                </button>
+            </div>);
+
+        return <div>
+            <h6>Sub-evento(s):</h6>
+            {components}
+        </div>
+    }
 }
 
 const mapStateToProps = state => {
-    return {event: state.event};
+    return {event: state.event, subevent: state.subevent};
 };
 
 function mapDispatchToProps(dispatch) {
     return {
-        setEvent: event_id => dispatch(setEvent(event_id))
+        setEvent: event_id => dispatch(setEvent(event_id)),
+        setSubEvent: subevent => dispatch(setSubEvent(subevent))
     };
 }
 
